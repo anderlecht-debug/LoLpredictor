@@ -91,7 +91,21 @@ def parse_csv(filepath):
     """Parse an Oracle's Elixir CSV file and return normalized DataFrames."""
     print(f"Parsing {filepath}...")
     df = pd.read_csv(filepath, low_memory=False)
+
+    # Validate this is actually a CSV with expected data (not HTML)
+    if len(df.columns) < 5:
+        raise ValueError(f"File appears invalid: only {len(df.columns)} columns found. "
+                         "It may be HTML instead of CSV. Check the download URL.")
+
     df = normalize_columns(df)
+
+    # Check for required position column
+    if 'position' not in df.columns:
+        # Print available columns for debugging
+        print(f"  Available columns: {list(df.columns[:20])}...")
+        raise ValueError(
+            f"'position' column not found. Available columns: {list(df.columns)}"
+        )
 
     # Normalize patch
     if 'patch' in df.columns:
