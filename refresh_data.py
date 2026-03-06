@@ -12,7 +12,7 @@ from ingestion.parser import parse_csv
 from ingestion.loader import load_player_data, load_team_data, load_games
 
 
-def refresh(download=True):
+def refresh(download=True, url=None):
     """Run the full data refresh pipeline."""
     print("=== LoL Props Lab Data Refresh ===")
 
@@ -23,7 +23,7 @@ def refresh(download=True):
     # Download CSVs
     if download:
         print("\n2. Downloading data from Oracle's Elixir...")
-        results = download_all()
+        results = download_all(custom_url=url)
         csv_files = [v for v in results.values() if v is not None]
     else:
         print("\n2. Using cached CSV files...")
@@ -75,4 +75,14 @@ def log_refresh(rows, status, message):
 
 if __name__ == '__main__':
     skip_download = '--no-download' in sys.argv or '--cached' in sys.argv
-    refresh(download=not skip_download)
+
+    # Parse --url argument
+    custom_url = None
+    for i, arg in enumerate(sys.argv):
+        if arg == '--url' and i + 1 < len(sys.argv):
+            custom_url = sys.argv[i + 1]
+
+    if skip_download:
+        refresh(download=False)
+    else:
+        refresh(download=True, url=custom_url)
