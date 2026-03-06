@@ -1,0 +1,10 @@
+__pycache__/
+*.pyc
+*.pyo
+data/lol_props.db
+data/csv_cache/
+venv/
+.env
+*.egg-info/
+dist/
+build/

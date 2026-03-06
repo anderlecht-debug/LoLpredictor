@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LoL Props Lab</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="nav-brand">LoL Props Lab</div>
+        <div class="nav-tabs">
+            <button class="nav-tab active" data-view="dashboard">Dashboard</button>
+            <button class="nav-tab" data-view="bestpicks">Best Picks</button>
+            <button class="nav-tab" data-view="results">Results</button>
+            <button class="nav-tab" data-view="settings">Settings</button>
+        </div>
+        <div class="nav-status">
+            <span id="data-freshness" class="freshness-badge">No data</span>
+            <button id="refresh-btn" class="btn btn-sm">Refresh Data</button>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="main-content">
+
+        <!-- Dashboard View -->
+        <div id="view-dashboard" class="view active">
+            <div class="dashboard-layout">
+                <!-- Match Selector -->
+                <div class="match-panel">
+                    <div class="panel-header">
+                        <h2>Matches</h2>
+                        <button id="add-match-btn" class="btn btn-primary btn-sm">+ Add Match</button>
+                    </div>
+                    <div id="match-list" class="match-list">
+                        <p class="empty-state">No matches added yet. Click "+ Add Match" to get started.</p>
+                    </div>
+                </div>
+
+                <!-- Projections Table -->
+                <div class="projections-panel">
+                    <div id="projections-header" class="panel-header">
+                        <h2>Projections</h2>
+                        <span id="match-info" class="match-info"></span>
+                    </div>
+                    <div id="projections-content" class="projections-content">
+                        <p class="empty-state">Select a match to view projections.</p>
+                    </div>
+                </div>
+
+                <!-- Game Context Sidebar -->
+                <div class="context-panel" id="context-panel" style="display:none">
+                    <h3>Game Environment</h3>
+                    <div id="context-content"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Best Picks View -->
+        <div id="view-bestpicks" class="view">
+            <h2>Best Picks</h2>
+            <div class="filters-bar">
+                <select id="filter-league" class="filter-select"><option value="">All Leagues</option></select>
+                <select id="filter-stat" class="filter-select">
+                    <option value="">All Stats</option>
+                    <option value="kills">Kills</option>
+                    <option value="deaths">Deaths</option>
+                    <option value="assists">Assists</option>
+                    <option value="cs">CS</option>
+                </select>
+                <select id="filter-confidence" class="filter-select">
+                    <option value="">All Confidence</option>
+                    <option value="high">High</option>
+                    <option value="medium">Medium</option>
+                    <option value="low">Low</option>
+                </select>
+            </div>
+            <div id="bestpicks-table-container">
+                <p class="empty-state">Enter lines on the Dashboard to see recommendations here.</p>
+            </div>
+            <div id="parlay-suggestions" style="display:none">
+                <h3>Parlay Suggestions</h3>
+                <div id="parlay-content"></div>
+            </div>
+        </div>
+
+        <!-- Results View -->
+        <div id="view-results" class="view">
+            <h2>Results & Performance</h2>
+            <div id="performance-summary" class="summary-cards"></div>
+            <div class="results-sections">
+                <div id="results-charts" class="charts-container"></div>
+                <div id="pending-picks-section">
+                    <h3>Pending Picks</h3>
+                    <div id="pending-picks-table"></div>
+                </div>
+                <div id="pick-history-section">
+                    <h3>Pick History</h3>
+                    <div id="pick-history-table"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Settings View -->
+        <div id="view-settings" class="view">
+            <h2>Settings</h2>
+            <div class="settings-grid">
+                <div class="settings-section">
+                    <h3>Model Parameters</h3>
+                    <div id="model-params-form"></div>
+                    <button id="save-settings-btn" class="btn btn-primary">Save Settings</button>
+                </div>
+                <div class="settings-section">
+                    <h3>Data Management</h3>
+                    <div id="data-status-panel"></div>
+                    <button id="refresh-data-btn" class="btn btn-primary">Refresh Data</button>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Add Match Modal -->
+    <div id="add-match-modal" class="modal" style="display:none">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Add Upcoming Match</h3>
+                <button class="modal-close">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>League</label>
+                    <input type="text" id="match-league" class="form-input" placeholder="e.g. LCK" list="league-suggestions">
+                    <datalist id="league-suggestions"></datalist>
+                </div>
+                <div class="form-group">
+                    <label>Team A</label>
+                    <input type="text" id="match-team-a" class="form-input" placeholder="Team name" list="team-suggestions-a">
+                    <datalist id="team-suggestions-a"></datalist>
+                </div>
+                <div class="form-group">
+                    <label>Team B</label>
+                    <input type="text" id="match-team-b" class="form-input" placeholder="Team name" list="team-suggestions-b">
+                    <datalist id="team-suggestions-b"></datalist>
+                </div>
+                <div class="form-group">
+                    <label>Date</label>
+                    <input type="date" id="match-date" class="form-input">
+                </div>
+                <div class="form-group">
+                    <label>Format</label>
+                    <select id="match-format" class="form-input">
+                        <option value="Bo1">Bo1</option>
+                        <option value="Bo3">Bo3</option>
+                        <option value="Bo5">Bo5</option>
+                    </select>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="cancel-match-btn" class="btn">Cancel</button>
+                <button id="save-match-btn" class="btn btn-primary">Add Match</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="/static/js/app.js"></script>
+</body>
+</html>
