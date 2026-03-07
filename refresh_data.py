@@ -9,7 +9,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from database.db import init_db, get_connection
 from ingestion.downloader import download_all, get_cached_files
 from ingestion.parser import parse_csv
-from ingestion.loader import load_player_data, load_team_data, load_games
+from ingestion.loader import load_players_and_teams, load_games, load_player_games, load_team_data
 
 
 def refresh(download=True, url=None):
@@ -41,16 +41,19 @@ def refresh(download=True, url=None):
         try:
             player_df, team_df = parse_csv(filepath)
 
-            print("   Loading player data (and teams)...")
-            player_count = load_player_data(player_df)
+            print("   Phase 1: Loading players and teams...")
+            player_count = load_players_and_teams(player_df)
 
-            print("   Loading team data...")
-            team_count = load_team_data(team_df)
-
-            print("   Loading games...")
+            print("   Phase 2: Loading games...")
             games_count = load_games(player_df, team_df)
 
-            total_rows += player_count + team_count + games_count
+            print("   Phase 3: Loading player games...")
+            pg_count = load_player_games(player_df)
+
+            print("   Phase 4: Loading team games...")
+            tg_count = load_team_data(team_df)
+
+            total_rows += player_count + games_count + pg_count + tg_count
         except Exception as e:
             print(f"   Error processing {filepath}: {e}")
             continue
