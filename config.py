@@ -5,10 +5,13 @@ import os
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DATA_DIR = os.path.join(BASE_DIR, 'data')
 CSV_CACHE_DIR = os.path.join(DATA_DIR, 'csv_cache')
-DB_PATH = os.path.join(DATA_DIR, 'lol_props.db')
+DB_PATH = os.environ.get('LOL_PROPS_DB_PATH', os.path.join(DATA_DIR, 'lol_props.db'))
 
-# Ensure directories exist
-os.makedirs(CSV_CACHE_DIR, exist_ok=True)
+# Ensure directories exist (skip if read-only filesystem like Vercel)
+try:
+    os.makedirs(CSV_CACHE_DIR, exist_ok=True)
+except OSError:
+    pass
 
 # Oracle's Elixir data URL
 ORACLE_ELIXIR_URL = 'https://oracleselixir.com/stats/players/byTournament'
