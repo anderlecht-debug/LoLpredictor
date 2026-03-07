@@ -41,14 +41,14 @@ def refresh(download=True, url=None):
         try:
             player_df, team_df = parse_csv(filepath)
 
-            print("   Loading games...")
-            games_count = load_games(player_df, team_df)
-
-            print("   Loading player data...")
+            print("   Loading player data (and teams)...")
             player_count = load_player_data(player_df)
 
             print("   Loading team data...")
             team_count = load_team_data(team_df)
+
+            print("   Loading games...")
+            games_count = load_games(player_df, team_df)
 
             total_rows += player_count + team_count + games_count
         except Exception as e:
