@@ -3,20 +3,18 @@
 from database.db import get_connection
 
 
-def load_player_data(player_df):
-    """Load player game data into the database."""
+def load_players_and_teams(player_df):
+    """First pass: upsert players and teams only (no FK dependencies)."""
     conn = get_connection()
-    inserted = 0
-    skipped = 0
+    players_seen = set()
+    teams_seen = set()
 
     for _, row in player_df.iterrows():
-        gameid = row.get('gameid')
         playername = row.get('playername')
-        if not gameid or not playername:
-            skipped += 1
+        if not playername or playername in players_seen:
             continue
+        players_seen.add(playername)
 
-        # Upsert player
         conn.execute("""
             INSERT INTO players (playername, current_team, current_league, current_position, last_updated)
             VALUES (?, ?, ?, ?, ?)
@@ -33,9 +31,9 @@ def load_player_data(player_df):
             row.get('date'),
         ))
 
-        # Upsert team
         teamname = row.get('teamname')
-        if teamname:
+        if teamname and teamname not in teams_seen:
+            teams_seen.add(teamname)
             conn.execute("""
                 INSERT INTO teams (teamname, current_league, last_updated)
                 VALUES (?, ?, ?)
@@ -44,7 +42,25 @@ def load_player_data(player_df):
                     last_updated = excluded.last_updated
             """, (teamname, row.get('league'), row.get('date')))
 
-        # Check if player_game already exists
+    conn.commit()
+    conn.close()
+    print(f"  Players: {len(players_seen)}, Teams: {len(teams_seen)}")
+    return len(players_seen)
+
+
+def load_player_games(player_df):
+    """Second pass: insert player_games (requires games to exist)."""
+    conn = get_connection()
+    inserted = 0
+    skipped = 0
+
+    for _, row in player_df.iterrows():
+        gameid = row.get('gameid')
+        playername = row.get('playername')
+        if not gameid or not playername:
+            skipped += 1
+            continue
+
         exists = conn.execute(
             "SELECT 1 FROM player_games WHERE game_id = ? AND playername = ?",
             (gameid, playername)
@@ -82,7 +98,7 @@ def load_player_data(player_df):
 
     conn.commit()
     conn.close()
-    print(f"Player data: {inserted} inserted, {skipped} skipped")
+    print(f"Player games: {inserted} inserted, {skipped} skipped")
     return inserted
 
 
