@@ -8,12 +8,7 @@ from database.queries import (
     save_pick, get_pending_picks, update_pick_result,
     get_all_team_names, get_data_status, get_pick_history,
 )
-from engine.projections import project_match, calculate_edge_for_line
-from recommendations.ranker import rank_picks
-from recommendations.correlations import detect_correlations
-from recommendations.parlays import suggest_parlays
-from tracking.performance import get_full_dashboard
-from tracking.calibration import check_calibration
+# Heavy imports (numpy/scipy) deferred to reduce cold start time
 
 api = Blueprint('api', __name__, url_prefix='/api')
 
@@ -63,6 +58,7 @@ def remove_match(match_id):
 
 @api.route('/matches/<int:match_id>/projections')
 def match_projections(match_id):
+    from engine.projections import project_match, calculate_edge_for_line
     match = get_match_by_id(match_id)
     if not match:
         return jsonify({'error': 'Match not found'}), 404
@@ -116,6 +112,7 @@ def submit_line():
     save_line(match_id, playername, stat, line_value)
 
     # Calculate edge
+    from engine.projections import project_match, calculate_edge_for_line
     match = get_match_by_id(match_id)
     if not match:
         return jsonify({'error': 'Match not found'}), 404
@@ -136,6 +133,11 @@ def submit_line():
 
 @api.route('/best-picks')
 def best_picks():
+    from engine.projections import project_match, calculate_edge_for_line
+    from recommendations.ranker import rank_picks
+    from recommendations.correlations import detect_correlations
+    from recommendations.parlays import suggest_parlays
+
     matches = get_upcoming_matches()
     all_picks = []
 
@@ -204,12 +206,14 @@ def enter_results():
 
 @api.route('/performance/summary')
 def performance_summary():
+    from tracking.performance import get_full_dashboard
     dashboard = get_full_dashboard()
     return jsonify(dashboard)
 
 
 @api.route('/performance/calibration')
 def calibration():
+    from tracking.calibration import check_calibration
     return jsonify(check_calibration())
 
 
